@@ -15,7 +15,7 @@ from rbac import RBACError
 
 def check_access(user_id: str, required_role: str) -> bool:
     """
-    Checks if a user has a required role.
+    Checks if a user has a required role..
 
     NOTE: This is a placeholder implementation. A real system would look
     this up in a database or identity provider.

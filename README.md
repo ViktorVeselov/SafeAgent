@@ -1,83 +1,176 @@
-<div>
-<br>
-</div>
+# safeagent
 
-[![Version](https://img.shields.io/badge/version-0.1.0-blue)](https://pypi.org/project/minillm/)
-[![Docs](https://img.shields.io/badge/docs-latest-blue)](docs/html/index.html)
+**safeagent** is a framework for building stateful, graph-based language model agents with enterprise-grade governance, reliability, and observability built-in from day one.
 
-**MiniLLM** is a lightweight framework for building long-running language model workflows with durable memory and governance logging. Gemini provides the default model for generation and embeddings.
+## Core Benefits
 
-# MiniLLM
+* **Stateful, Graph-Based Workflows**: Go beyond simple chains and build complex, cyclical agents with conditional logic that can reason and adapt.
+* **Unparalleled Governance & Observability**: Every action—from node transitions to tool executions—is automatically audited with detailed logs for cost, latency, and data lineage.
+* **Production-Grade Reliability**: Build resilient agents with built-in policies for caching, automatic retries with exponential backoff, and circuit breakers.
+* **Human-in-the-Loop**: Pause the graph at any point, allow for human review or input, and seamlessly resume the workflow.
+* **Extensible Sinks**: Automatically send tool results to other systems like files, databases, or message queues (e.g., Pub/Sub) for seamless integration.
 
-**MiniLLM** is a lightweight framework for building long‑running language model workflows with durable memory and governance logging. Gemini is the default provider for both generation and embeddings.
+## Get Started
 
-`minillm` is a minimal, flexible framework for orchestrating LLM workflows. It provides pluggable components for retrieval, memory, and orchestration with built in governance logging. The default configuration now targets Google's **Gemini** models for both generation and embeddings.
+### Installation
 
-
-## Get started
-
-Install MiniLLM:
+For local development, clone the repository and install in editable mode:
 
 ```bash
-pip install -e .[test]
-```
+git clone [https://github.com/ViktorVeselov/SafeAgent.git](https://github.com/ViktorVeselov/SafeAgent.git)
+cd SafeAgent
+pip install -e .
+````
 
-Create a simple question-answering agent:
-=======
+-----
 
-Create a simple question-answering agent:
-=======
-Create a simple question‑answering agent:
+### Example 1: A Production-Ready Tool
 
+This example demonstrates how to create a standalone tool with a rich set of declarative policies, including cost tracking, caching, retries, and output sinks.
+
+#### Step 1: Imports and Setup
 
 ```python
-from minillm.pipeline import main as run_pipeline
+import os
+import shutil
+from pathlib import Path
+from safeagent import ToolRegistry, GovernanceManager
+from safeagent.sinks import FileOutputSink, PubSubSink
 
-run_pipeline()
+# Initialize the Governance Manager to track all actions
+gov = GovernanceManager()
+
+# Define sinks to handle tool outputs
+file_sink = FileOutputSink(base_path="invoices")
+pubsub_sink = PubSubSink(project_id="your-gcp-project", topic_id="invoice-notifications")
 ```
 
-Comprehensive documentation, including a Quickstart guide and API reference, is available in the [docs folder](docs/html/index.html).
+#### Step 2: Define a Governed Tool with `@register`
 
-## Core benefits
-=======
+The `@register` decorator is the heart of `safeagent`'s power. Here, we define a tool and attach several production-grade policies directly to it.
 
-For more information, see the [Quickstart](docs/html/quickstart.html). To learn how to build more advanced workflows or customize components, browse the [full documentation](docs/html/index.html).
+```python
+# The ToolRegistry uses the GovernanceManager to audit all tool-related actions.
+tool_registry = ToolRegistry(governance_manager=gov)
 
-## Core benefits
+# This cost function calculates a dynamic cost based on the tool's output.
+def calculate_invoice_cost(result):
+    return 0.05 if result.get("status") == "success" else 0.01
 
-- Durable execution with a minimal orchestrator
-- Governance logging built into every component
-- Comprehensive memory with summary support
-- Retrieval via FAISS or Neo4j graphs using Gemini embeddings
+@tool_registry.register(
+    required_role="billing_agent",
+    retry_attempts=2,
+    retry_delay=1.5,
+    cache_ttl_seconds=3600,
+    cost_calculator=calculate_invoice_cost,
+    output_sinks=[file_sink, pubsub_sink]
+)
+def generate_invoice(customer_id: int, amount: float) -> dict:
+    """
+    Generates a new invoice for a customer and saves it.
+    This tool is restricted to users with the 'billing_agent' role.
+    """
+    invoice_data = {"customerId": customer_id, "amount": amount, "status": "success"}
+    return invoice_data
+```
 
-## MiniLLM ecosystem
+#### Step 3: Execute the Tool
 
-MiniLLM integrates with other tools like Neo4j, Redis, and Jinja2 templates. Gemini models are configured by default through the `GEMINI_API_KEY` environment variable, but you can swap in another provider by adjusting your `Config`.
+When we get the tool from the registry, it's already wrapped with all the policies we defined. Executing it automatically triggers all associated governance.
 
-## Additional resources
+```python
+# Get the fully-governed tool from the registry.
+governed_invoice_tool = tool_registry.get_governed_tool(
+    "generate_invoice", 
+    user_id="user_viktor", 
+    roles=["billing_agent", "support"]
+)
 
-- [Quickstart](docs/html/quickstart.html)
-- [API Reference](docs/html/reference.html)
-=======
-See the [Quickstart](docs/html/quickstart.html) for details, or browse the [full HTML docs](docs/html/index.html).
+# Execute the tool. This will trigger RBAC checks, retries, cost calculation, and sinks.
+result = governed_invoice_tool(customer_id=456, amount=199.99)
 
-## Core benefits
+# Clean up the generated directory for the example
+shutil.rmtree("invoices")
+```
 
-- **Durable execution** with a minimal orchestrator
-- **Governance logging** built into every component
-- **Comprehensive memory** using Redis or in‑memory storage
-- **Plug‑and‑play retrieval** via FAISS or Neo4j graphs
+-----
 
-## Ecosystem
+### Example 2: A Stateful Research Agent
 
-MiniLLM integrates easily with other tools such as Neo4j, Redis, and Jinja2 templates. Gemini models provide the default LLM and embedding services, but you can swap in other providers through configuration.
+This example shows how to use governed tools within the `StatefulOrchestrator` to build a complex, multi-step agent with conditional logic.
 
+#### Step 1: Define Tools for the Agent
 
-## Optional Docker usage
+```python
+# We can use the same GovernanceManager and sinks from the previous example
+tool_registry_agent = ToolRegistry(governance_manager=gov)
+file_sink_agent = FileOutputSink(base_path="research_outputs")
 
-A `Dockerfile` is included for containerized execution:
+@tool_registry_agent.register(cache_ttl_seconds=3600, output_sinks=[file_sink_agent])
+def conduct_research(topic: str) -> str:
+    """Conducts research on a given topic."""
+    print(f"--- Conducting research on: {topic} ---")
+    if "gemini" in topic.lower():
+        return "Gemini is a family of multimodal models developed by Google."
+    return "No information found."
 
-- Durable execution with a minimal orchestrator
-- Governance logging built into every component
-- Comprehensive memory with summary support
-- Retrieval via FAISS or Neo4j graphs using Gemini embeddings
+@tool_registry_agent.register(output_sinks=[file_sink_agent])
+def write_summary(research_data: str) -> str:
+    """Writes a summary based on the provided research data."""
+    print(f"--- Writing summary for: {research_data[:30]}... ---")
+    return f"Summary: {research_data}"
+```
+
+#### Step 2: Define the Graph Nodes and Edges
+
+Each node is a function that executes a tool, and the conditional edge decides the next step based on the current state.
+
+```python
+from safeagent import StatefulOrchestrator
+
+# Get the governed tools
+research_tool = tool_registry_agent.get_governed_tool("conduct_research")
+summary_tool = tool_registry_agent.get_governed_tool("write_summary")
+
+def research_node(state: dict) -> dict:
+    research_result = research_tool(topic=state["topic"])
+    return {"research_data": research_result}
+
+def summary_node(state: dict) -> dict:
+    summary_result = summary_tool(research_data=state["research_data"])
+    return {"summary": summary_result}
+
+def decide_next_step(state: dict) -> str:
+    if state.get("research_data") and "No information found" not in state["research_data"]:
+        return "summary_node"
+    return "__end__"
+```
+
+#### Step 3: Build and Run the Graph
+
+Assemble the graph in the `StatefulOrchestrator` and run it with an initial input.
+
+```python
+# Initialize the orchestrator with an entry point
+orchestrator = StatefulOrchestrator(entry_node="research_node")
+
+# Add nodes and edges to define the workflow
+orchestrator.add_node("research_node", research_node)
+orchestrator.add_node("summary_node", summary_node)
+orchestrator.add_conditional_edge("research_node", decide_next_step)
+orchestrator.add_edge("summary_node", "__end__")
+
+# Run the graph
+status, final_state = orchestrator.run(inputs={"topic": "Google Gemini"})
+
+print(f"\nGraph execution finished with status: {status}")
+
+# Clean up
+shutil.rmtree("research_outputs")
+```
+
+After running these scripts, you will see a detailed `audit.log` file with every action, cost, and policy decision, providing complete visibility into your agent's operations.
+
+## Documentation
+
+For more information, see the [Quickstart](https://www.google.com/search?q=https://ViktorVeselov.github.io/SafeAgent/quickstart/) for details, or browse the [full documentation site](https://www.google.com/search?q=https://ViktorVeselov.github.io/SafeAgent/).

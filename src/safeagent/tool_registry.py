@@ -11,12 +11,27 @@ from typing import Any, Callable, Dict, List, Optional, Union
 from .embeddings import gemini_embed
 from .governance import GovernanceManager
 from .sinks import BaseOutputSink
-from rbac import RBACError, check_access
+from rbac import RBACError
 
-# --- Optional Dependencies & Graceful Degradation ---
-# Imports are at the top of the file for clarity as per Python standards.
-# The try...except block handles cases where optional dependencies for
-# semantic search are not installed, allowing the rest of the module to function.
+def check_access(user_id: str, required_role: str) -> bool:
+    """
+    Checks if a user has a required role.
+
+    NOTE: This is a placeholder implementation. A real system would look
+    this up in a database or identity provider.
+    """
+    user_role_database = {
+        "user_viktor": ["billing_agent", "support"],
+        "forecaster_alex": ["weather_forecaster"],
+        "intern_bob": ["guest"]
+    }
+
+    current_user_roles = user_role_database.get(user_id, [])
+    if required_role in current_user_roles:
+        return True
+
+    return False
+    
 try:
     import faiss
     import numpy as np

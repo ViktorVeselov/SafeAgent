@@ -1,33 +1,50 @@
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+# This is a basic workflow to help you get started with Actions
+# The name of your workflow. It will be displayed in the Actions tab of your GitHub repository.
+name: Publish Python Package to PyPI
 
-[project]
-name = "safeagent"
-version = "0.1.0"
-authors = [
-    { name="Viktor Veselov"},
-]
-description = "A minimal and flexible framework for orchestrating LLM workflows."
-readme = "README.md"
-requires-python = ">=3.8"
-license = { file="LICENSE" }
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-]
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push events but only for the "main" branch
+  push:
+    branches: [ "main" ]
 
-dependencies = [
-    "requests",
-    "jinja2",
-    "py-rbac",
-    "faiss-cpu",
-    "neo4j",
-    "redis",
-    "numpy",
-    "cryptography"
-]
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "pypi-publish"
+  pypi-publish:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    # Specifies the permissions the GITHUB_TOKEN will have.
+    # 'id-token: write' is required for trusted publishing.
+    permissions:
+      id-token: write
 
-[project.optional-dependencies]
-test = ["pytest"]
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Step 1: Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # Step 2: Sets up Python 3.x
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10" # You can change this to your preferred Python version
+
+    # Step 3: Install pypa/build, the tool used to build your package
+    - name's-the-build-dependencies'
+      run: >-
+        python -m
+        pip install
+        build
+      
+    # Step 4: Build the package
+    # This command reads your pyproject.toml and builds the source distribution and wheel.
+    - name: Build package
+      run: python -m build
+
+    # Step 5: Publish the package to PyPI
+    # This uses the pypa/gh-action-pypi-publish action, which is designed for this purpose.
+    # It automatically handles the authentication with PyPI using the trusted publisher you configured.
+    - name: Publish package to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1

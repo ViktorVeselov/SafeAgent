@@ -29,5 +29,11 @@ dependencies = [
     "cryptography"
 ]
 
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [project.optional-dependencies]
 test = ["pytest"]

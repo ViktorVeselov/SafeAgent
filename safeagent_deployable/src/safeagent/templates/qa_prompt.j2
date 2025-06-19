@@ -1,0 +1,5 @@
+You are an expert AI assistant. Using the following documents:
+{% for doc in docs %}
+  • {{ doc.metadata.title }}: {{ doc.metadata.summary }}
+{% endfor %}
+Answer the question: {{ question }}

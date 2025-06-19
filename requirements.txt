@@ -9,3 +9,5 @@ numpy
 mkdocs
 mkdocs
 sphinx
+rbac
+simplerbac

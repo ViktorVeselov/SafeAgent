@@ -1,5 +1,5 @@
-"""Minimal LLM workflow framework."""
-__version__ = "0.3.0" 
+"""SafeAgent LLM workflow framework."""
+__version__ = "0.0.2" 
 
 from .config import Config
 from .embeddings import gemini_embed

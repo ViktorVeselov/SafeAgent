@@ -86,7 +86,7 @@ def make_prompt(retrieve_docs: list, user_input: str, user_id: str, **kwargs) ->
     Render the QA prompt with retrieved documents.
     """
     # Access control
-    if not check_aaccess_manager.check_accessccess(user_id, "prompt_render"):
+    if not access_manager.check_access(user_id, "prompt_render"):
         raise RBACError(f"User {user_id} unauthorized to render prompts")
 
     return renderer.render(

@@ -1,0 +1,43 @@
+
+<html><head><meta charset='UTF-8'><link rel='stylesheet' href='style.css'></head><body><nav><a href="index.html">Index</a> <a href="quickstart.html">Quickstart</a> <a href="concepts.html">Concepts</a> <a href="reference.html">Reference</a></nav>
+<h1>Quickstart</h1>
+
+<p>Follow these steps to try the demo agent.</p>
+
+<h2>Installation</h2>
+
+<p>Install the package with the testing extras so you can run the included example and tests:</p>
+=======
+<html><body>
+<h1>Quickstart</h1>
+
+<p>Install the package with testing extras:</p>
+
+<pre><code>
+pip install -e .[test]
+</code></pre>
+
+<p>Set your Gemini API key in the environment:</p>
+
+<pre><code>
+export GEMINI_API_KEY=&lt;your-key&gt;
+</code></pre>
+
+<h2>Running the example</h2>
+
+<p>Execute the pipeline entrypoint to start a question-answering agent:</p>
+=======
+<p>Run the example pipeline:</p>
+
+<pre><code>
+from minillm.pipeline import main as run_pipeline
+run_pipeline()
+</code></pre>
+
+<p>The agent will retrieve documents, call Gemini to generate an answer and store a summary of the conversation.</p>
+
+<p>Configuration values such as model name, vector index path and database credentials are controlled by environment variables. See `minillm.config.Config` for defaults.</p>
+=======
+<p>Configuration values (such as API keys) can be supplied through</p>
+<p>environment variables. See `minillm.config.Config` for defaults.</p>
+</body></html>

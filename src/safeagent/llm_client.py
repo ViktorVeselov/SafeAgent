@@ -4,9 +4,9 @@ import logging
 from typing import Dict
 
 try:
-    import requests  # type: ignore
-except ModuleNotFoundError:  # pragma: no cover - fallback for minimal envs
-    requests = None  # type: ignore
+    import requests 
+except ModuleNotFoundError: 
+    requests = None 
 from .governance import GovernanceManager
 from .utils import get_request_id
 

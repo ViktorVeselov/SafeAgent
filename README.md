@@ -52,7 +52,7 @@ pubsub_sink = PubSubSink(project_id="your-gcp-project", topic_id="invoice-notifi
 ```
 
 
-#### Step 2: Define a Governed Tool with `@register`
+#### Define a Governed Tool with `@register`
 
 The `@register` decorator is the heart of `safeagent`'s power. Here, we define a tool and attach several production-grade policies directly to it.
 

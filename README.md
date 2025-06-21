@@ -9,11 +9,11 @@
 
 ## Core Benefits
 
-* **Graphs **: Go beyond simple chains and build complex, cyclical agents with conditional logic that can reason and adapt.
-* **Governance & Observability **: Every action—from node transitions to tool executions—is automatically audited with detailed logs for cost, latency, and data lineage.
-* **Reliability **: Build resilient agents with built-in policies for caching, automatic retries with exponential backoff, and circuit breakers.
-* **Human-in-the-Loop **: Pause the graph at any point, allow for human review or input, and seamlessly resume the workflow.
-* **Extensible Sinks **: Automatically send tool results to other systems like files, databases, or message queues (e.g., Pub/Sub) for seamless integration.
+* **Graphs**: Go beyond simple chains and build complex, cyclical agents with conditional logic that can reason and adapt.
+* **Governance & Observability**: Every action—from node transitions to tool executions—is automatically audited with detailed logs for cost, latency, and data lineage.
+* **Reliability**: Build resilient agents with built-in policies for caching, automatic retries with exponential backoff, and circuit breakers.
+* **Human-in-the-Loop**: Pause the graph at any point, allow for human review or input, and seamlessly resume the workflow.
+* **Extensible Sinks**: Automatically send tool results to other systems like files, databases, or message queues (e.g., Pub/Sub) for seamless integration.
 
 ## Get Started
 

@@ -1,5 +1,5 @@
 """SafeAgent LLM workflow framework."""
-__version__ = "0.0.2" 
+__version__ = "0.0.3" 
 
 from .config import Config
 from .embeddings import gemini_embed
@@ -9,18 +9,20 @@ from .memory_manager import MemoryManager
 from .orchestrator import SimpleOrchestrator
 from .prompt_renderer import PromptRenderer
 from .retriever import GraphRetriever, VectorRetriever
-from .stateful_orchestrator import (EdgeRegistrationError, 
-                                    NodeNotFoundError,
-                                    OrchestratorError, 
-                                    StatefulOrchestrator,
-                                    StateValidationError)
+from .stateful_orchestrator import (
+    EdgeRegistrationError, 
+    NodeNotFoundError,
+    OrchestratorError, 
+    StatefulOrchestrator,
+    StateValidationError)
 from .sinks import BaseOutputSink, FileOutputSink, PubSubSink
-from .tool_registry import (AccessManager,
-                            SimilarityMetric, 
-                            ToolExecutionError,
-                            ToolNotFoundError, 
-                            ToolRegistry, 
-                            ToolRegistryError)
+from .tool_registry import (
+    AccessManager,
+    SimilarityMetric, 
+    ToolExecutionError,
+    ToolNotFoundError, 
+    ToolRegistry, 
+    ToolRegistryError)
 from .protocol_manager import PROTOCOLS, ProtocolManager
 
 __all__ = [

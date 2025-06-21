@@ -43,9 +43,10 @@ class LLMClient:
 
             self.session = _DummySession()
         self.session.headers.update({
-            "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
         })
+        if self.provider != "gemini":
+            self.session.headers["Authorization"] = f"Bearer {self.api_key}"
         self.gov = GovernanceManager()
 
     def _default_url(self) -> str:

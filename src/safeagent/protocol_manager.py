@@ -5,7 +5,7 @@ import time
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List
-from rbac import RBACError, check_access
+from rbac import RBACError
 from .config import Config
 from .embeddings import gemini_embed
 from .governance import GovernanceManager
@@ -14,7 +14,7 @@ from .memory_manager import MemoryManager
 from .orchestrator import SimpleOrchestrator
 from .prompt_renderer import PromptRenderer
 from .retriever import GraphRetriever, VectorRetriever
-from .tool_registry import SimilarityMetric, ToolRegistry
+from .tool_registry import SimilarityMetric, ToolRegistry, AccessManager
 
 # Protocol Configuration
 class PROTOCOLS(Enum):
@@ -34,6 +34,7 @@ class ProtocolManager:
     """
     def __init__(self, protocol: str = None):
         self.protocol = protocol or DEFAULT_PROTOCOL
+        self.access_manager = access_manager or AccessManager()
         if self.protocol not in (p.value for p in PROTOCOLS):
             raise ValueError("Unsupported protocol: {}".format(self.protocol))
         gov.audit(
@@ -74,6 +75,7 @@ class ProtocolManager:
         # Correctly initialize the ToolRegistry with all new configurations
         tool_registry = ToolRegistry(
             governance_manager=gov,
+            access_manager=self.access_manager,
             embedding_config={"api_key": cfg.api_key},
             similarity_metric=SimilarityMetric(cfg.tool_similarity_metric),
             embedding_dimension=cfg.embedding_dimension
@@ -89,8 +91,8 @@ class ProtocolManager:
         )
         def get_weather(city: str) -> str:
             """A governed tool to fetch the weather for a given city."""
-            if "zephyrhills" in city.lower():
-                return "It is currently 82°F and sunny in Zephyrhills."
+            if "new york" in city.lower():
+                return "It is currently 82°F and sunny in New York."
             elif "san francisco" in city.lower():
                 return "It is currently 65°F and foggy in San Francisco."
             else:
@@ -104,7 +106,7 @@ class ProtocolManager:
         orch = SimpleOrchestrator()
 
         def retrieve_docs(user_input: str, user_id: str, **kwargs):
-            if not check_access(user_id, "vector_store"):
+            if not tool_registry.access_manager.check_access(user_id, "vector_store"):
                 raise RBACError("User {} unauthorized for retrieval".format(user_id))
             v_docs = vector_ret.query(user_input, top_k=3)
             g_docs = graph_ret.query(user_input, top_k=3)
@@ -123,7 +125,7 @@ class ProtocolManager:
             )
 
         def call_llm_for_tool(make_initial_prompt: str, user_id: str, **kwargs) -> dict:
-            if not check_access(user_id, "llm_call"):
+            if not tool_registry.access_manager.check_access(user_id, "llm_call"):
                 raise RBACError("User {} unauthorized for LLM calls".format(user_id))
             summary = mem_mgr.load(user_id, "summary") or ""
             full_prompt = "{}\n\n{}".format(summary, make_initial_prompt)
@@ -220,8 +222,18 @@ if __name__ == "__main__":
     template_dir.mkdir(exist_ok=True)
     (template_dir / "tool_decider_prompt.j2").write_text("Question: {{ question }}\nTools: {{ tools }}")
     (template_dir / "synthesis_prompt.j2").write_text("Based on this tool result: {{ tool_result }}, answer the question: {{ question }}")
+    custom_roles = {
+        "test_user_123": ["vector_store", "llm_call", "weather_forecaster"]
+    }
+    custom_access_manager = AccessManager(role_config=custom_roles)
+
     test_inputs = {"user_input": "What is the weather like in New York City today?", "user_id": "test_user_123"}
-    pm = ProtocolManager(protocol=PROTOCOLS.MCP.value)
+    
+    # Pass the custom manager to the ProtocolManager
+    pm = ProtocolManager(
+        protocol=PROTOCOLS.MCP.value, 
+        access_manager=custom_access_manager
+    )
     final_results = pm.run(test_inputs)
     print("\n--- MCP Protocol Final Result ---")
     print(json.dumps(final_results.get("generate_final_answer"), indent=2))

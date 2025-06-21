@@ -15,7 +15,8 @@ from .stateful_orchestrator import (EdgeRegistrationError,
                                     StatefulOrchestrator,
                                     StateValidationError)
 from .sinks import BaseOutputSink, FileOutputSink, PubSubSink
-from .tool_registry import (SimilarityMetric, 
+from .tool_registry import (AccessManager,
+                            SimilarityMetric, 
                             ToolExecutionError,
                             ToolNotFoundError, 
                             ToolRegistry, 
@@ -23,6 +24,7 @@ from .tool_registry import (SimilarityMetric,
 from .protocol_manager import PROTOCOLS, ProtocolManager
 
 __all__ = [
+    "AccessManager",
     "Config", 
     "gemini_embed", 
     "GovernanceManager", 

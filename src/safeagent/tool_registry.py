@@ -13,24 +13,37 @@ from .governance import GovernanceManager
 from .sinks import BaseOutputSink
 from rbac import RBACError
 
-def check_access(user_id: str, required_role: str) -> bool:
+class AccessManager:
     """
-    Checks if a user has a required role..
-
-    NOTE: This is a placeholder implementation. A real system would look
-    this up in a database or identity provider.
+    A centralized class to manage Role-Based Access Control (RBAC).
+    
+    This class can be initialized with a user role mapping, or it will
+    use a default set of roles for demonstration purposes.
     """
-    user_role_database = {
-        "user_viktor": ["billing_agent", "support"],
-        "forecaster_alex": ["weather_forecaster"],
-        "intern_bob": ["guest"]
-    }
+    def __init__(self, role_config: Optional[Dict[str, List[str]]] = None):
+        """
+        Initializes the AccessManager.
+        
+        Args:
+            role_config: A dictionary mapping user IDs to a list of their roles.
+                         If None, a default demo configuration is used.
+        """
+        if role_config is not None:
+            self._user_role_database = role_config
+        else:
+            self._user_role_database = {
+                "billing_user_01": ["billing_agent", "support"],
+                "weather_analyst_7": ["weather_forecaster"],
+                "data_auditor_3": ["readonly_viewer", "guest_access"]
+            }
 
-    current_user_roles = user_role_database.get(user_id, [])
-    if required_role in current_user_roles:
-        return True
-
-    return False
+    def check_access(self, user_id: str, required_role: str) -> bool:
+        """
+        Checks if a user has a required role by looking them up in the
+        internal role database.
+        """
+        current_user_roles = self._user_role_database.get(user_id, [])
+        return required_role in current_user_roles
     
 try:
     import faiss
@@ -89,6 +102,7 @@ class ToolRegistry:
     def __init__(
         self,
         governance_manager: GovernanceManager,
+        access_manager: Optional[AccessManager] = None,
         embedding_config: Optional[Dict] = None,
         similarity_metric: SimilarityMetric = SimilarityMetric.L2,
         embedding_dimension: int = 768
@@ -96,6 +110,7 @@ class ToolRegistry:
         self._tools: Dict[str, Callable] = {}
         self._tool_metadata: Dict[str, Dict] = {}
         self.gov = governance_manager
+        self.access_manager = access_manager or AccessManager()
         self.embedding_config = embedding_config or {}
         self.similarity_metric = similarity_metric
         self.embedding_dimension = embedding_dimension
@@ -171,7 +186,7 @@ class ToolRegistry:
 
     def _check_pre_execution_policies(self, name: str, user_id: str, policies: Dict, **kwargs) -> Optional[Any]:
         """Handles caching, circuit breaker, and RBAC checks. Returns cached result if hit."""
-        # 1. Caching
+        # Caching
         if policies["cache_ttl_seconds"] > 0:
             cache_key = self._create_cache_key(name, **kwargs)
             if cache_key in self._cache:
@@ -180,7 +195,7 @@ class ToolRegistry:
                     self.gov.audit(user_id, "tool_cache_hit", name, {"args": kwargs})
                     return cached_item["result"]
         
-        # 2. Circuit Breaker
+        # Circuit Breaker
         cb_state = self._circuit_breaker_state[name]
         if cb_state['is_open']:
             if time.time() - cb_state['opened_at'] > 60:  # 1-minute cooldown
@@ -190,8 +205,8 @@ class ToolRegistry:
                 self.gov.audit(user_id, "tool_circuit_breaker_open", name, {"error": msg})
                 raise ToolExecutionError(msg)
 
-        # 3. RBAC
-        if policies["role"] and not check_access(user_id, policies["role"]):
+        # RBAC
+        if policies["role"] and not self.access_manager.check_access(user_id, policies["role"]):
             msg = "User '{}' lacks required role '{}' for tool '{}'.".format(user_id, policies["role"], name)
             self.gov.audit(user_id, "tool_access_denied", name, {"required_role": policies["role"]})
             raise RBACError(msg)

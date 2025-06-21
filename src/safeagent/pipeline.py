@@ -8,9 +8,10 @@ from .prompt_renderer import PromptRenderer
 from .retriever import VectorRetriever, GraphRetriever
 from .embeddings import gemini_embed
 from .memory_manager import MemoryManager
-from rbac import check_access, RBACError
+from rbac import RBACError
 from .governance import GovernanceManager
 from .config import Config
+from .tool_registry import AccessManager
 
 # Configure logging to output JSON lines to stdout
 logging.basicConfig(
@@ -59,12 +60,11 @@ mem_mgr = MemoryManager(
     redis_url=cfg.redis_url,
 )
 
+access_manager = AccessManager()
 # Audit framework initialization
 gov_manager.audit(user_id="system", action="pipeline_init", resource="minillm_framework")
 
-# -----------------------------------
-# 2. Define DAG node functions
-# -----------------------------------
+# Define DAG node functions
 
 def retrieve_docs(user_input: str, user_id: str, **kwargs):
     """
@@ -72,7 +72,7 @@ def retrieve_docs(user_input: str, user_id: str, **kwargs):
     Merges results and deduplicates by 'id'.
     """
     # Access control
-    if not check_access(user_id, "vector_store"):
+    if not access_manager.check_access(user_id, "vector_store"):
         raise RBACError(f"User {user_id} unauthorized for retrieval")
 
     v_docs = vector_ret.query(user_input, top_k=5)
@@ -86,7 +86,7 @@ def make_prompt(retrieve_docs: list, user_input: str, user_id: str, **kwargs) ->
     Render the QA prompt with retrieved documents.
     """
     # Access control
-    if not check_access(user_id, "prompt_render"):
+    if not check_aaccess_manager.check_accessccess(user_id, "prompt_render"):
         raise RBACError(f"User {user_id} unauthorized to render prompts")
 
     return renderer.render(
@@ -100,7 +100,7 @@ def call_llm(make_prompt: str, user_id: str, **kwargs) -> dict:
     """
     Prepend memory summary to prompt and call LLM.
     """
-    if not check_access(user_id, "llm_call"):
+    if not access_manager.check_access(user_id, "llm_call"):
         raise RBACError(f"User {user_id} unauthorized for LLM calls")
 
     # Load existing memory summary
@@ -149,10 +149,7 @@ def update_graph(call_llm: dict, user_id: str, **kwargs) -> list:
             )
     return entities
 
-# -----------------------------------
-# 3. Build and run the DAG
-# -----------------------------------
-
+# Build and run the DAG
 orch = SimpleOrchestrator()
 orch.add_node("retrieve_docs", retrieve_docs)
 orch.add_node("make_prompt", make_prompt)

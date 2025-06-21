@@ -11,13 +11,44 @@ While many tools can help you build a prototype, SafeAgent is designed to build 
 -   **Secure by Design**: A declarative, role-based access control (RBAC) system for tools ensures that agents and users only have access to the functions they're authorized to use.
 -   **Developer-First Experience**: With features like automatic tool-schema generation, optional state validation, and a visual run tracer (via the audit log), SafeAgent is designed to maximize developer velocity and minimize debugging headaches.
 
-## Getting Started
+---
 
+## Table of Contents
+
+### Getting Started
+-   **[Quickstart](./quickstart.md)**: A brief introduction to get you up and running.
 -   **[Tutorial](./getting-started/tutorial.md)**: See the power of SafeAgent in a single, runnable script.
 -   **[Configuration](./getting-started/configuration.md)**: Learn how to configure SafeAgent for your environment.
 
-## Ready for Advanced Use Cases?
+### Core Concepts
+-   **[Overview](./concepts.md)**: A high-level look at the concepts in SafeAgent.
+-   **[Orchestrators](./core-concepts/orchestrators.md)**: Learn about the components that drive the agent's logic.
+-   **[Tool Registry](./core-concepts/tool-registry.md)**: Manage and secure your agent's tools.
+-   **[Retrievers](./core-concepts/retrievers.md)**: Provide external knowledge to your agents.
+-   **[Memory](./core-concepts/memory.md)**: Give your agents short-term and long-term memory.
+-   **[Governance](./core-concepts/governance.md)**: Understand the built-in security and observability features.
+-   **[Storage & Persistence](./core-concepts/storage-and-persistence.md)**: Learn how to save and load agent states.
+-   **[LLM Client](./core-concepts/llm-client.md)**: Interact with Language Models.
 
--   **[Stateful Agents](./advanced-guides/stateful-agents.md)**: See how to build complex, cyclical agents using the `StatefulOrchestrator`.
--   **[Production Policies](./advanced-guides/production-policies.md)**: Dive deep into the reliability and cost-management features of the `ToolRegistry`.
--   **[Output Sinks](./advanced-guides/output-sinks.md)**: Learn how to automatically send tool outputs to other systems like files or message queues.
+### Advanced Guides
+-   **[Stateful Agents (ReAct)](./advanced-guides/stateful-agents.md)**: Build complex, cyclical agents.
+-   **[Production Policies](./advanced-guides/production-policies.md)**: Dive deep into reliability and cost-management.
+-   **[Human-in-the-Loop](./advanced-guides/human-in-the-loop.md)**: Add human oversight to your agents.
+-   **[Output Sinks](./advanced-guides/output-sinks.md)**: Automatically send tool outputs to other systems.
+
+### Examples
+-   **[Custom Tool Suite](./examples/custom-tool-suite.md)**: See how to create and use your own tools.
+-   **[Database Integration](./examples/database-integration.md)**: Connect your agent to a database.
+-   **[Multi-Tool ReAct Agent](./examples/multi-tool-agent.md)**: Build an agent that can use multiple tools.
+
+### API Reference
+-   **[Overview](./api/index.md)**: Start here for the API documentation.
+-   **[Reference](./reference.md)**: Detailed API reference.
+-   **[Core](./api/core.md)**: Core components of the framework.
+-   **[Orchestrators](./api/orchestrators.md)**: API for orchestration.
+-   **[Protocols](./api/protocols.md)**: Data protocols and models.
+-   **[Sinks](./api/sinks.md)**: API for output sinks.
+-   **[Tooling](./api/tooling.md)**: Utilities and helpers for tool creation.
+
+### Other
+-   **[Comparison](./comparison.md)**: How SafeAgent compares to other frameworks.

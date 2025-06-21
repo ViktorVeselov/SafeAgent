@@ -34,7 +34,7 @@ pip install -e .
 
 This example demonstrates how to create a standalone tool with a rich set of declarative policies, including cost tracking, caching, retries, and output sinks.
 
-#### Step 1: Imports and Setup
+#### Imports and Setup
 
 ```python
 import os
@@ -82,7 +82,7 @@ def generate_invoice(customer_id: int, amount: float) -> dict:
 ```
 
 
-#### Step 3: Execute the Tool
+#### Execute the Tool
 
 When we get the tool from the registry, it's already wrapped with all the policies we defined. Executing it automatically triggers all associated governance.
 
@@ -108,7 +108,7 @@ shutil.rmtree("invoices")
 
 This example shows how to use governed tools within the `StatefulOrchestrator` to build a complex, multi-step agent with conditional logic.
 
-#### Step 1: Define Tools for the Agent
+#### Define Tools for the Agent
 
 ```python
 # We can use the same GovernanceManager and sinks from the previous example
@@ -131,7 +131,7 @@ def write_summary(research_data: str) -> str:
 ```
 
 
-#### Step 2: Define the Graph Nodes and Edges
+#### : Define the Graph Nodes and Edges
 
 Each node is a function that executes a tool, and the conditional edge decides the next step based on the current state.
 
@@ -157,7 +157,7 @@ def decide_next_step(state: dict) -> str:
 ```
 
 
-#### Step 3: Build and Run the Graph
+#### Build and Run the Graph
 
 Assemble the graph in the `StatefulOrchestrator` and run it with an initial input.
 
@@ -173,10 +173,8 @@ orchestrator.add_edge("summary_node", "__end__")
 
 # Run the graph
 status, final_state = orchestrator.run(inputs={"topic": "Google Gemini"})
-
 print(f"\nGraph execution finished with status: {status}")
 
-# Clean up
 shutil.rmtree("research_outputs")
 ```
 

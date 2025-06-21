@@ -1,0 +1,68 @@
+site_name: SafeAgent Docs
+site_dir: site
+repo_url: https://github.com/ViktorVeselov/SafeAgent
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.instant
+    - toc.integrate
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  language: en
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+
+nav:
+  - 'Home': 'index.md'
+  - 'Getting Started':
+      - 'Quickstart': 'quickstart.md'
+      - 'Tutorial': 'getting-started/tutorial.md'
+      - 'Configuration': 'getting-started/configuration.md'
+  - 'Comparison': 'comparison.md'
+  - 'Core Concepts':
+      - 'Overview': 'concepts.md'
+      - 'Orchestrators': 'core-concepts/orchestrators.md'
+      - 'Tool Registry': 'core-concepts/tool-registry.md'
+      - 'Retrievers': 'core-concepts/retrievers.md'
+      - 'Memory': 'core-concepts/memory.md'
+      - 'Governance': 'core-concepts/governance.md'
+      - 'Storage & Persistence': 'core-concepts/storage-and-persistence.md'
+      - 'LLM Client': 'core-concepts/llm-client.md'
+  - 'Advanced Guides':
+      - 'Stateful Agents (ReAct)': 'advanced-guides/stateful-agents.md'
+      - 'Production Policies': 'advanced-guides/production-policies.md'
+      - 'Human-in-the-Loop': 'advanced-guides/human-in-the-loop.md'
+      - 'Output Sinks': 'advanced-guides/output-sinks.md'
+  - 'Examples':
+      - 'Custom Tool Suite': 'examples/custom-tool-suite.md'
+      - 'Database Integration': 'examples/database-integration.md'
+      - 'Multi-Tool ReAct Agent': 'examples/multi-tool-agent.md'
+  - 'API Reference':
+      - 'Overview': 'api/index.md'
+      - 'Reference': 'reference.md'
+      - 'Core': 'api/core.md'
+      - 'Orchestrators': 'api/orchestrators.md'
+      - 'Protocols': 'api/protocols.md'
+      - 'Sinks': 'api/sinks.md'
+      - 'Tooling': 'api/tooling.md'

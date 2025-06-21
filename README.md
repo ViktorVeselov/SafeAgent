@@ -1,14 +1,19 @@
 # safeagent
 
+[![PyPI version](https://badge.fury.io/py/safeagent.svg)](https://badge.fury.io/py/safeagent)
+[![Build Status](https://github.com/ViktorVeselov/SafeAgent/actions/workflows/publish-to-pypi.yml/badge.svg)](https://github.com/ViktorVeselov/SafeAgent/actions/workflows/publish-to-pypi.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://viktorveselov.github.io/SafeAgent/)
+
 **safeagent** is a framework for building stateful, graph-based language model agents with enterprise-grade governance, reliability, and observability built-in from day one.
 
 ## Core Benefits
 
-* **Stateful, Graph-Based Workflows**: Go beyond simple chains and build complex, cyclical agents with conditional logic that can reason and adapt.
-* **Unparalleled Governance & Observability**: Every action—from node transitions to tool executions—is automatically audited with detailed logs for cost, latency, and data lineage.
-* **Production-Grade Reliability**: Build resilient agents with built-in policies for caching, automatic retries with exponential backoff, and circuit breakers.
-* **Human-in-the-Loop**: Pause the graph at any point, allow for human review or input, and seamlessly resume the workflow.
-* **Extensible Sinks**: Automatically send tool results to other systems like files, databases, or message queues (e.g., Pub/Sub) for seamless integration.
+* **Graphs 📈**: Go beyond simple chains and build complex, cyclical agents with conditional logic that can reason and adapt.
+* **Governance & Observability 🕵️‍♀️**: Every action—from node transitions to tool executions—is automatically audited with detailed logs for cost, latency, and data lineage.
+* **Reliability ⚙️**: Build resilient agents with built-in policies for caching, automatic retries with exponential backoff, and circuit breakers.
+* **Human-in-the-Loop 🧑‍💻**: Pause the graph at any point, allow for human review or input, and seamlessly resume the workflow.
+* **Extensible Sinks 📤**: Automatically send tool results to other systems like files, databases, or message queues (e.g., Pub/Sub) for seamless integration.
 
 ## Get Started
 
@@ -20,7 +25,8 @@ For local development, clone the repository and install in editable mode:
 git clone [https://github.com/ViktorVeselov/SafeAgent.git](https://github.com/ViktorVeselov/SafeAgent.git)
 cd SafeAgent
 pip install -e .
-````
+```
+
 
 -----
 
@@ -28,7 +34,7 @@ pip install -e .
 
 This example demonstrates how to create a standalone tool with a rich set of declarative policies, including cost tracking, caching, retries, and output sinks.
 
-#### Step 1: Imports and Setup
+#### Imports and Setup
 
 ```python
 import os
@@ -44,6 +50,7 @@ gov = GovernanceManager()
 file_sink = FileOutputSink(base_path="invoices")
 pubsub_sink = PubSubSink(project_id="your-gcp-project", topic_id="invoice-notifications")
 ```
+
 
 #### Step 2: Define a Governed Tool with `@register`
 
@@ -74,7 +81,8 @@ def generate_invoice(customer_id: int, amount: float) -> dict:
     return invoice_data
 ```
 
-#### Step 3: Execute the Tool
+
+#### Execute the Tool
 
 When we get the tool from the registry, it's already wrapped with all the policies we defined. Executing it automatically triggers all associated governance.
 
@@ -93,13 +101,14 @@ result = governed_invoice_tool(customer_id=456, amount=199.99)
 shutil.rmtree("invoices")
 ```
 
+
 -----
 
 ### Example 2: A Stateful Research Agent
 
 This example shows how to use governed tools within the `StatefulOrchestrator` to build a complex, multi-step agent with conditional logic.
 
-#### Step 1: Define Tools for the Agent
+#### Define Tools for the Agent
 
 ```python
 # We can use the same GovernanceManager and sinks from the previous example
@@ -121,7 +130,8 @@ def write_summary(research_data: str) -> str:
     return f"Summary: {research_data}"
 ```
 
-#### Step 2: Define the Graph Nodes and Edges
+
+#### : Define the Graph Nodes and Edges
 
 Each node is a function that executes a tool, and the conditional edge decides the next step based on the current state.
 
@@ -146,7 +156,8 @@ def decide_next_step(state: dict) -> str:
     return "__end__"
 ```
 
-#### Step 3: Build and Run the Graph
+
+#### Build and Run the Graph
 
 Assemble the graph in the `StatefulOrchestrator` and run it with an initial input.
 
@@ -162,15 +173,14 @@ orchestrator.add_edge("summary_node", "__end__")
 
 # Run the graph
 status, final_state = orchestrator.run(inputs={"topic": "Google Gemini"})
-
 print(f"\nGraph execution finished with status: {status}")
 
-# Clean up
 shutil.rmtree("research_outputs")
 ```
+
 
 After running these scripts, you will see a detailed `audit.log` file with every action, cost, and policy decision, providing complete visibility into your agent's operations.
 
 ## Documentation
 
-For more information, see the [Quickstart](https://www.google.com/search?q=https://ViktorVeselov.github.io/SafeAgent/quickstart/) for details, or browse the [full documentation site](https://www.google.com/search?q=https://ViktorVeselov.github.io/SafeAgent/).
+For more information, see the **[Quickstart](https://viktorveselov.github.io/SafeAgent/quickstart/)** for details, or browse the **[full documentation site](https://viktorveselov.github.io/SafeAgent/)**.

@@ -1,4 +1,17 @@
-# SafeAgent
+<table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin: 0; padding: 0;">
+  <tr>
+    <td style="padding-right: 15px;">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="./docs/SafeAgent.png">
+        <source media="(prefers-color-scheme: light)" srcset="./docs/SafeAgent.png">
+        <img alt="SafeAgent Logo" src="./docs/SafeAgent.png" width="100">
+      </picture>
+    </td>
+    <td>
+      <h1 style="margin: 0;">SafeAgent</h1>
+    </td>
+  </tr>
+</table>
 
 [![PyPI version](https://badge.fury.io/py/safeagent.svg)](https://badge.fury.io/py/safeagent)
 [![Build Status](https://github.com/ViktorVeselov/SafeAgent/actions/workflows/publish-to-pypi.yml/badge.svg)](https://github.com/ViktorVeselov/SafeAgent/actions/workflows/publish-to-pypi.yml)

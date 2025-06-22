@@ -1,24 +1,26 @@
+# .github/workflows/publish-to-pypi.yml
+
 name: Publish Python Package to PyPI
 
 on:
   release:
-    types: [published]
+    types: [published] # This workflow runs when a new release is published on GitHub
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # Run the job on an Ubuntu virtual machine
 
     environment:
-      name: pypi
+      name: pypi # Optional: Specify a deployment environment if you have one configured
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4 
+        uses: actions/checkout@v4 # Action to checkout your repository code
 
       - name: Set up Python
-        uses: actions/setup-python@v5 
+        uses: actions/setup-python@v5 # Action to set up Python
         with:
-          python-version: '3.x'
+          python-version: '3.x' # Use the latest Python 3 version
 
       - name: Install dependencies
         run: |
@@ -35,9 +37,16 @@ jobs:
           twine check dist/* # Check the package metadata for validity
 
       - name: Publish package to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@release/v1 # Use the official PyPA action for publishing
         with:
+          # Your PyPI API token stored as a GitHub Secret.
+          # This token should start with 'pypi-'.
           password: ${{ secrets.PYPI_API_TOKEN }}
+          # When using an API token (starts with pypi-), the username is always __token__
           user: __token__
+          # The directory where your package distribution files are located
           packages_dir: dist
+          # Optional: Skip publishing if the version already exists on PyPI
           skip_existing: true
+          # Optional: Enable verbose logging for more details (useful for debugging)
+          # verbose: true

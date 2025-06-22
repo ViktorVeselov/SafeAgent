@@ -1,54 +1,39 @@
-name: Publish to PyPI
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
 
-on:
-  push:
-    tags:
-      - 'v*'           # Push any tag that starts with "v"
+[project]
+name = "safeagent"
+version = "0.0.10.3"
+authors = [
+    { name="Viktor Veselov"},
+]
+description = "A minimal and flexible framework for orchestrating LLM workflows."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file="LICENSE" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
 
-permissions:
-  contents: read
-  id-token: write      # only needed if you switch to Trusted Publisher
+dependencies = [
+    "requests",
+    "jinja2",
+    "py-rbac",
+    "faiss-cpu",
+    "neo4j",
+    "redis",
+    "numpy",
+    "cryptography"
+]
 
-jobs:
-  build-and-publish:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+[tool.setuptools.package-dir]
+"" = "src"
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: pip
+[tool.setuptools.packages.find]
+where = ["src"]
 
-      # 1️⃣ Verify tag === version in pyproject.toml
-      - name: Check tag / version match
-        id: version
-        run: |
-          TAG=${GITHUB_REF#refs/tags/v}
-          VERSION=$(python - <<'PY'
-import tomllib, pathlib
-print(tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]["version"])
-PY
-)
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          if [ "$TAG" != "$VERSION" ]; then
-            echo "::error::Git tag '$TAG' does not match version '$VERSION' in pyproject.toml"
-            exit 1
-          fi
-
-      # 2️⃣ Build distributions
-      - name: Install build backend
-        run: python -m pip install --upgrade build
-
-      - name: Build sdist and wheel
-        run: python -m build --sdist --wheel --outdir dist/
-
-      # 3️⃣ Upload (TestPyPI for -rc, PyPI otherwise)
-      - name: Publish to PyPI / TestPyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ startsWith(steps.version.outputs.tag, '*-rc') && secrets.TEST_PYPI_API_TOKEN || secrets.PYPI_API_TOKEN }}
-          repository_url: ${{ startsWith(steps.version.outputs.tag, '*-rc') && 'https://test.pypi.org/legacy/' || 'https://upload.pypi.org/legacy/' }}
-          skip_existing: true
+[project.optional-dependencies]
+test = ["pytest", "pytest-mock"]

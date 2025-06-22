@@ -2,9 +2,9 @@ import time
 import json
 import logging
 try:
-    import numpy as np  # type: ignore
+    import numpy as np 
     _NUMPY = True
-except ModuleNotFoundError:  # pragma: no cover - fallback for minimal envs
+except ModuleNotFoundError:  
     _NUMPY = False
     class _NP:
         ndarray = list
@@ -32,15 +32,15 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for minimal envs
         def argsort(a):
             return sorted(range(len(a)), key=lambda i: a[i])
 
-    np = _NP()  # type: ignore
+    np = _NP()  
 from pathlib import Path
 from typing import List, Dict, Any
 
 try:
-    import faiss  # type: ignore
+    import faiss 
     _FAISS = True
-except ModuleNotFoundError:  # pragma: no cover - fallback for minimal envs
-    faiss = None  # type: ignore
+except ModuleNotFoundError:
+    faiss = None  
     _FAISS = False
 from .governance import GovernanceManager
 
@@ -163,30 +163,41 @@ class GraphRetriever(BaseRetriever):
     """Neo4j-backed GraphRAG retriever using GDS k-NN, with governance integration."""
 
     def __init__(self, neo4j_uri: str, user: str, password: str, gds_graph_name: str, embed_model_fn):
-        """Create the retriever.
-
-        Args:
-            neo4j_uri (str): Bolt URI for Neo4j (e.g., 'bolt://localhost:7687').
-            user (str): Username for Neo4j.
-            password (str): Password for Neo4j.
-            gds_graph_name (str): Name of the GDS graph projection in Neo4j.
-            embed_model_fn (callable): Function mapping text to an embedding vector.
-        """
-        from neo4j import GraphDatabase
-
-        self.driver = GraphDatabase.driver(neo4j_uri, auth=(user, password))
-        self.gds_graph = gds_graph_name
-        self.embed = embed_model_fn
+        """Create the retriever. If neo4j_uri is falsy, the retriever is disabled."""
+        self.driver = None
         self.gov = GovernanceManager()
+        self.embed = embed_model_fn
+        self.gds_graph = gds_graph_name
+
+        if not neo4j_uri:
+            logging.info("GraphRetriever is disabled because no neo4j_uri was provided.")
+            return
+
+        try:
+            from neo4j import GraphDatabase, exceptions
+            self.driver = GraphDatabase.driver(neo4j_uri, auth=(user, password))
+            # Test the connection to fail fast
+            with self.driver.session() as session:
+                session.run("RETURN 1")
+            logging.info("Successfully connected to Neo4j.")
+        except ImportError:
+            logging.warning("The 'neo4j' library is not installed. GraphRetriever will be disabled.")
+            self.driver = None
+        except exceptions.ServiceUnavailable:
+            logging.warning(f"Could not connect to Neo4j at '{neo4j_uri}'. GraphRetriever is disabled.")
+            self.driver = None
+        except Exception as e:
+            logging.warning(f"An unexpected error occurred while connecting to Neo4j. GraphRetriever is disabled. Error: {e}")
+            self.driver = None
+
 
     def index(self, embeddings: List[List[float]], metadata: List[Dict[str, Any]]):
         """
         Ingest each document as a node with a 'vector' property and 'metadata' (with lineage tagging).
-
-        Args:
-            embeddings (List[List[float]]): List of embedding vectors.
-            metadata (List[Dict[str, Any]]): List of metadata dicts (must include 'id').
         """
+        if not self.driver:
+            return 
+
         self.gov.audit(user_id="system", action="graph_index", resource="neo4j", metadata={"count": len(embeddings)})
         with self.driver.session() as session:
             for vec, meta in zip(embeddings, metadata):
@@ -206,37 +217,42 @@ class GraphRetriever(BaseRetriever):
     def query(self, query_text: str, top_k: int = 5) -> List[Dict[str, Any]]:
         """
         Compute embedding for query_text, run GDS K-NN, and return nearest documents (with lineage tagging).
-
-        Args:
-            query_text (str): The query string.
-            top_k (int): Number of nearest neighbors to return.
-
-        Returns:
-            List[Dict[str, Any]]: Each dict contains 'id', 'score', and 'metadata'.
         """
+        if not self.driver:
+            return []
+
         # Encrypt and audit query
         encrypted_query = self.gov.encrypt(query_text)
         self.gov.audit(user_id="system", action="graph_query", resource="neo4j", metadata={"query_enc": encrypted_query[:50], "top_k": top_k})
 
-        vec = self._compute_embedding(query_text)
+        vec = self.embed(query_text)
         cypher = f"""
-            CALL gds.knn.query(
+            CALL gds.knn.stream(
                 '{self.gds_graph}',
-                $vector,
-                {{k: $k}}
+                {{
+                    topK: $k,
+                    nodeWeightProperty: 'vector',
+                    queryVector: $vector
+                }}
             ) YIELD nodeId, similarity
             RETURN gds.util.asNode(nodeId).id AS id, similarity
         """
         results = []
-        with self.driver.session() as session:
-            for record in session.run(cypher, vector=vec, k=top_k):
-                node_id = record["id"]
-                score = record["similarity"]
-                meta = session.run(
-                    "MATCH (d:Document {id: $id}) RETURN d.metadata AS meta", id=node_id
-                ).single()["meta"]
-                tagged_meta = self.gov.tag_lineage(meta.copy(), source="graph_query")
-                results.append({"id": node_id, "score": score, "metadata": tagged_meta})
+        try:
+            with self.driver.session() as session:
+                for record in session.run(cypher, vector=vec, k=top_k):
+                    node_id = record["id"]
+                    score = record["similarity"]
+                    meta_record = session.run(
+                        "MATCH (d:Document {id: $id}) RETURN d.metadata AS meta", id=node_id
+                    ).single()
+                    if meta_record:
+                        meta = meta_record["meta"]
+                        tagged_meta = self.gov.tag_lineage(meta.copy(), source="graph_query")
+                        results.append({"id": node_id, "score": score, "metadata": tagged_meta})
+        except Exception as e:
+            logging.error(f"Error querying Neo4j GDS: {e}")
+            return []
 
         log_entry = {
             "event": "graph_query",
@@ -245,10 +261,6 @@ class GraphRetriever(BaseRetriever):
         }
         logging.info(json.dumps(log_entry))
         return results
-
-    def _compute_embedding(self, text: str) -> List[float]:
-        """Return an embedding for ``text`` via the provided embedding function."""
-        return self.embed(text)
 
 
 # Register default retrievers

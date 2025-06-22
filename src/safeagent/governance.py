@@ -1,3 +1,4 @@
+# governance
 import time
 import json
 import logging
@@ -36,10 +37,13 @@ class GovernanceManager:
     retention policies, and run ID management.
     """
 
-    def __init__(self, audit_log_path: str = "audit.log", retention_days: int = 30):
-        self.audit_log_path = audit_log_path
+    def __init__(self, audit_log_path: str = "audit", retention_days: int = 30, audit_log_extension: str = "json"):
+        self.audit_log_path = f"{audit_log_path}.{audit_log_extension}"
         self.retention_days = retention_days
-        open(self.audit_log_path, "a").close()
+        log_dir = os.path.dirname(self.audit_log_path)
+        if log_dir: 
+            os.makedirs(log_dir, exist_ok=True)
+        open(self.audit_log_path, "a").close() 
         self.current_run_id = None
 
     def start_new_run(self) -> str:
@@ -88,13 +92,19 @@ class GovernanceManager:
         """Purge audit log entries older than retention period."""
         cutoff = time.time() - self.retention_days * 86400
         retained = []
-        with open(self.audit_log_path, "r") as f:
-            for line in f:
-                try:
-                    entry = json.loads(line)
-                    if entry.get("timestamp", 0) >= cutoff:
-                        retained.append(line)
-                except json.JSONDecodeError:
-                    continue
+        try:
+            with open(self.audit_log_path, "r") as f:
+                for line in f:
+                    try:
+                        entry = json.loads(line)
+                        if entry.get("timestamp", 0) >= cutoff:
+                            retained.append(line)
+                    except json.JSONDecodeError:
+                        logging.warning(f"Skipping malformed line in audit log: {line.strip()}")
+                        continue 
+        except FileNotFoundError:
+            logging.info(f"Audit log file not found at {self.audit_log_path} during purge. No purging needed.")
+            return
+
         with open(self.audit_log_path, "w") as f:
             f.writelines(retained)

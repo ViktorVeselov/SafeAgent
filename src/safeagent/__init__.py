@@ -1,5 +1,5 @@
 """SafeAgent LLM workflow framework."""
-__version__ = "0.0.10.2.1" 
+__version__ = "0.0.10" 
 
 from .config import Config
 from .embeddings import gemini_embed
@@ -24,6 +24,7 @@ from .tool_registry import (
     ToolRegistry, 
     ToolRegistryError)
 from .protocol_manager import PROTOCOLS, ProtocolManager
+from .multi_agent_manager import MultiAgentManager
 
 __all__ = [
     "AccessManager",
@@ -51,4 +52,5 @@ __all__ = [
     "ToolExecutionError",
     "ProtocolManager", 
     "PROTOCOLS",
+    "MultiAgentManager",
 ]

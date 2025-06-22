@@ -18,14 +18,35 @@ class MemoryManager:
         redis_url: e.g., "redis://localhost:6379" if backend="redis".
         """
         global _redis
-        if backend == "redis":
+        self.backend = backend
+
+        if self.backend == "redis":
             if _redis is None:
-                import redis as _redis
-            self.client = _redis.from_url(redis_url)
-            self.backend = "redis"
-        else:
-            self.store = {}  # {user_id: {key: value}}
-            self.backend = "inmemory"
+                try:
+                    import redis
+                    _redis = redis
+                except ModuleNotFoundError:
+                    logging.error("Redis backend selected, but 'redis' package not found. Falling back to in-memory.")
+                    self.backend = "inmemory" 
+                    self.store = {}
+                    return
+
+            if _redis: 
+                self.client = _redis.from_url(redis_url)
+                try:
+                    self.client.ping()
+                    logging.info("Successfully connected to Redis.")
+                except Exception as e:
+                    logging.error(f"Failed to connect to Redis at {redis_url}: {e}. Falling back to in-memory.")
+                    self.backend = "inmemory"
+                    self.store = {}
+            else:
+                logging.error("Redis package not available. Falling back to in-memory.")
+                self.backend = "inmemory"
+                self.store = {}
+
+        if self.backend == "inmemory":
+            self.store = {} 
 
     def save(self, user_id: str, key: str, value: str) -> None:
         """Saves value under (user_id, key)."""
@@ -70,7 +91,12 @@ class MemoryManager:
         Stores the summary under key="summary" and returns it.
         """
         if self.backend == "redis":
-            all_vals = [v.decode("utf-8") for v in self.client.hvals(user_id)]
+            # Ensure proper handling if client failed to initialize or connection dropped
+            try:
+                all_vals = [v.decode("utf-8") for v in self.client.hvals(user_id)]
+            except Exception as e:
+                logging.warning(f"Could not retrieve from Redis during summarize: {e}. Using empty history.")
+                all_vals = []
         else:
             all_vals = list(self.store.get(user_id, {}).values())
 

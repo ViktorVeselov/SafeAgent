@@ -22,3 +22,6 @@ class Config:
     # Tool Registry and Embedding Configuration
     embedding_dimension: int = field(default_factory=lambda: int(os.getenv("EMBEDDING_DIMENSION", "768")))
     tool_similarity_metric: str = field(default_factory=lambda: os.getenv("TOOL_SIMILARITY_METRIC", "cosine"))
+    # Protocol-Specific Logging Configuration
+    log_mcp_separate: bool = field(default_factory=lambda: os.getenv("LOG_MCP_SEPARATE", "True").lower() in ('true', '1', 't'))
+    log_a2a_separate: bool = field(default_factory=lambda: os.getenv("LOG_A2A_SEPARATE", "True").lower() in ('true', '1', 't'))

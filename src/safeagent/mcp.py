@@ -2,16 +2,18 @@
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
 import uuid
-#
+
 @dataclass
 class Message:
     """
     Represents a single message sent between agents.
     """
-    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    # Non-default arguments should come first
     sender_id: str
     recipient_id: str
     content: Any
+    # Default arguments or arguments with default_factory come after
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
     is_response: bool = False
     request_id: Optional[str] = None 
 

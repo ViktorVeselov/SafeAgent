@@ -1,52 +1,52 @@
-name: Publish to PyPI
+# .github/workflows/publish-to-pypi.yml
+
+name: Publish Python Package to PyPI
 
 on:
-  push:
-    tags:
-      - 'v*'
-
-permissions:
-  contents: read
-  id-token: write
+  release:
+    types: [published] # This workflow runs when a new release is published on GitHub
 
 jobs:
-  build-and-publish:
-    runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-latest # Run the job on an Ubuntu virtual machine
+
+    environment:
+      name: pypi # Optional: Specify a deployment environment if you have one configured
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4 # Action to checkout your repository code
 
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5 # Action to set up Python
         with:
-          python-version: '3.11'
-          cache: pip
+          python-version: '3.x' # Use the latest Python 3 version
 
-      - name: Check tag equals pyproject version
-        id: ver
-        shell: bash
+      - name: Install dependencies
         run: |
-          TAG="${GITHUB_REF#refs/tags/v}"
-          VERSION=$(python -c "import tomllib, pathlib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])")
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          [ "$TAG" = "$VERSION" ] || { echo "::error::tag $TAG ≠ version $VERSION"; exit 1; }
+          python -m pip install --upgrade pip
+          pip install setuptools wheel twine # Install tools to build and upload packages
 
-      - name: Clean build dir
-        run: rm -rf build dist *.egg-info
-
-      - name: Build dists
+      - name: Build distribution
         run: |
-          python -m pip install --upgrade build
-          python -m build --wheel --sdist --outdir dist
+          python setup.py sdist bdist_wheel # Or use 'python -m build' if you have 'build' installed and pyproject.toml
 
-      - name: Twine check
+      - name: Check distribution files
         run: |
-          python -m pip install --upgrade twine
-          twine check dist/*
+          ls -l dist/ # List files in dist/ to verify they exist
+          twine check dist/* # Check the package metadata for validity
 
-      - name: Publish
-        uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1 # Use the official PyPA action for publishing
         with:
+          # Your PyPI API token stored as a GitHub Secret.
+          # This token should start with 'pypi-'.
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          # When using an API token (starts with pypi-), the username is always __token__
           user: __token__
-          password: ${{ endsWith(steps.ver.outputs.tag, '-rc') && secrets.TEST_PYPI_API_TOKEN || secrets.PYPI_API_TOKEN }}
-          repository_url: ${{ endsWith(steps.ver.outputs.tag, '-rc') && 'https://test.pypi.org/legacy/' || 'https://upload.pypi.org/legacy/' }}
-          skip_existing: false
+          # The directory where your package distribution files are located
+          packages_dir: dist
+          # Optional: Skip publishing if the version already exists on PyPI
+          skip_existing: true
+          # Optional: Enable verbose logging for more details (useful for debugging)
+          # verbose: true

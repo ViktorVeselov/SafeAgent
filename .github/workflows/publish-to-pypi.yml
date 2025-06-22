@@ -25,11 +25,7 @@ jobs:
         shell: bash
         run: |
           TAG="${GITHUB_REF#refs/tags/v}"
-          VERSION=$(python - <<'PY'
-import tomllib, pathlib
-print(tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]["version"])
-PY
-)
+          VERSION=$(python -c "import tomllib, pathlib, sys; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])")
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           if [ "$TAG" != "$VERSION" ]; then

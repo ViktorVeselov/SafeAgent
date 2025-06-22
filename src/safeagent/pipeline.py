@@ -23,10 +23,6 @@ logging.basicConfig(
 gov_manager = GovernanceManager()
 gov_manager.purge_old_logs()
 
-# -----------------------------------
-# 1. Initialize shared resources
-# -----------------------------------
-
 cfg = Config()
 
 # LLM client. Values can be overridden by modifying `cfg` before calling main().

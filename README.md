@@ -1,19 +1,33 @@
-# safeagent
+<table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin: 0; padding: 0;">
+  <tr>
+    <td style="padding-right: 15px;">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="./docs/SafeAgent.png">
+        <source media="(prefers-color-scheme: light)" srcset="./docs/SafeAgent.png">
+        <img alt="SafeAgent Logo" src="./docs/SafeAgent.png" width="100">
+      </picture>
+    </td>
+    <td>
+      <h1 style="margin: 0;">SafeAgent</h1>
+    </td>
+  </tr>
+</table>
 
 [![PyPI version](https://badge.fury.io/py/safeagent.svg)](https://badge.fury.io/py/safeagent)
 [![Build Status](https://github.com/ViktorVeselov/SafeAgent/actions/workflows/publish-to-pypi.yml/badge.svg)](https://github.com/ViktorVeselov/SafeAgent/actions/workflows/publish-to-pypi.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://viktorveselov.github.io/SafeAgent/)
+[![Downloads](https://pepy.tech/badge/SafeAgent)](https://pepy.tech/project/SafeAgent)
 
 **safeagent** is a framework for building stateful, graph-based language model agents with enterprise-grade governance, reliability, and observability built-in from day one.
 
 ## Core Benefits
 
-* **Graphs 📈**: Go beyond simple chains and build complex, cyclical agents with conditional logic that can reason and adapt.
-* **Governance & Observability 🕵️‍♀️**: Every action—from node transitions to tool executions—is automatically audited with detailed logs for cost, latency, and data lineage.
-* **Reliability ⚙️**: Build resilient agents with built-in policies for caching, automatic retries with exponential backoff, and circuit breakers.
-* **Human-in-the-Loop 🧑‍💻**: Pause the graph at any point, allow for human review or input, and seamlessly resume the workflow.
-* **Extensible Sinks 📤**: Automatically send tool results to other systems like files, databases, or message queues (e.g., Pub/Sub) for seamless integration.
+* **Graphs**: Go beyond simple chains and build complex, cyclical agents with conditional logic that can reason and adapt.
+* **Governance & Observability**: Every action—from node transitions to tool executions—is automatically audited with detailed logs for cost, latency, and data lineage.
+* **Reliability**: Build resilient agents with built-in policies for caching, automatic retries with exponential backoff, and circuit breakers.
+* **Human-in-the-Loop**: Pause the graph at any point, allow for human review or input, and seamlessly resume the workflow.
+* **Extensible Sinks**: Automatically send tool results to other systems like files, databases, or message queues (e.g., Pub/Sub) for seamless integration.
 
 ## Get Started
 
